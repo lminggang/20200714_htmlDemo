@@ -1,0 +1,34 @@
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta name="viewport" content="initial-scale=1.0, user-scalable=no" />
+<style type="text/css">
+body, html,#allmap {width: 100%;height: 100%;overflow: hidden;margin:0;font-family:"微软雅黑";}
+</style>
+<script type="text/javascript" src="https://api.map.baidu.com/api?v=2.0&ak=icuMskyuD0MgX5Hq0h3gGCErFkYsPpac"></script>
+<title>设置驾车路线途经点</title>
+</head>
+<body>
+<div id='show_distance' style="display: none; width: 100; height: 100px; background: #fff;"></div>
+<div id="allmap"></div>
+</body>
+</html>
+<script type="text/javascript">
+
+// 百度地图API功能
+var map = new BMap.Map("allmap");
+map.centerAndZoom(new BMap.Point(-68.03191081736583, 6.123401792633468), 15);
+var top_left_control = new BMap.ScaleControl({anchor: BMAP_ANCHOR_TOP_LEFT});// 左上角，添加比例尺
+map.enableScrollWheelZoom(true);
+map.addControl(top_left_control);   
+var marker = false
+map.addEventListener("click",function(e){
+	// alert(e.point.lng + "," + e.point.lat);
+
+	if(marker){
+		map.removeOverlay(marker)
+	}
+	marker = new BMap.Marker(e.point);
+  	map.addOverlay(marker);
+});
+</script>

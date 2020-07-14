@@ -1,0 +1,371 @@
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta name="viewport" content="initial-scale=1.0, user-scalable=no" />
+<style type="text/css">
+body, html,#allmap {width: 100%;height: 100%;overflow: hidden;margin:0;font-family:"微软雅黑";}
+</style>
+
+</head>
+<body>
+<canvas id="canvas" width="700" height="700" style="border:1px solid #c3c3c3;">
+Your browser does not support the canvas element.
+</canvas>
+</body>
+</html>
+<script type="text/javascript">
+
+class drawGauges {
+
+  constructor(canvas) {
+    this.initGauges(canvas)
+  }
+
+  initGauges(canvas) {
+    // var canvas = document.getElementById('canvas');
+    this.canvas = canvas
+    this.ctx = this.canvas.getContext('2d');
+    // 基础
+    this.marginX = this.canvas.width / 2;
+    this.marginY = this.canvas.height / 2;
+    this.radius = this.marginX - 50;
+    this.textRadius = this.radius + 30
+    // 刻度
+    this.scaleMedium = this.radius + 15;
+    this.scaleSmall = this.radius + 10;
+    this.scaleMini = this.radius + 5;
+    // 内边框
+    this.borderWidth = 1;
+    // 颜色
+    this.borderColor = 'red';
+    this.scaleColor = 'green';
+    this.textColor = 'green';
+    this.textMainColor = 'blue';
+    // 旋转
+    this.angle = 0;
+    this.oldAngle = 0;
+    // 定时器
+    this.timer;
+
+    this.ctx.translate(this.marginX, this.marginY);
+    this.raf;
+    this.options  = {
+      animationDuration: 1,
+    }
+  }
+
+  getRadians(angle) {
+    return angle * Math.PI / 180
+  }
+
+  getRotateRadians(angle) {
+    return (360 - angle) * Math.PI / 180
+  }
+
+  drawTexts() {
+    this.ctx.save();
+    this.ctx.beginPath();
+    this.ctx.textAlign = 'center';
+    this.ctx.textBaseline = 'middle';
+    for (var i=0;i<36;i++){
+      var value = (i * 10)
+      var textAngle = this.getRadians(value) + this.getRotateRadians(this.angle)
+      var x = this.textRadius * Math.sin(textAngle)
+      // TODO: y axis compensate -2
+      var y = -(this.textRadius * Math.cos(textAngle) + 2)
+
+      if (value === 0) {
+        value = '北'
+        this.ctx.font="24px Arial";
+        this.ctx.fillStyle = this.textMainColor;
+      } else if (value === 90) {
+        value = '东'
+        this.ctx.font="24px Arial";
+        this.ctx.fillStyle = this.textMainColor;
+      } else if (value === 180) {
+        value = '南'
+        this.ctx.font="24px Arial";
+        this.ctx.fillStyle = this.textMainColor;
+      } else if (value === 270) {
+        value = '西'
+        this.ctx.font="24px Arial";
+        this.ctx.fillStyle = this.textMainColor;
+      } else {
+        this.ctx.font="16px Arial";
+        this.ctx.fillStyle = this.textColor;
+      }
+      this.ctx.fillText(value, x, y);
+    }
+    this.ctx.closePath();
+    this.ctx.restore();
+  }
+
+  drawScale() {
+    // 大刻度
+    this.ctx.save();
+    this.ctx.beginPath();
+    this.ctx.rotate(this.getRotateRadians(this.angle));
+    this.ctx.lineWidth = 2;
+
+    for (var i=0;i<72;i++){
+      var to = this.scaleMedium
+      if (i % 2 != 0) {
+        var to = this.scaleSmall
+      }
+      this.ctx.beginPath();
+      this.ctx.strokeStyle = this.scaleColor;
+      this.ctx.moveTo(this.radius,0);
+      this.ctx.lineTo(to,0);
+      this.ctx.stroke();
+      this.ctx.rotate(this.getRadians(5));
+    }
+    this.ctx.closePath();
+    this.ctx.restore();
+
+    // 小刻度
+    this.ctx.save();
+    this.ctx.beginPath();
+    this.ctx.rotate(this.getRotateRadians(this.angle));
+    this.ctx.lineWidth = 1;
+    
+    for (i=0;i<360;i++){
+      if (i%5!=0) {
+        this.ctx.beginPath();
+        this.ctx.strokeStyle = this.scaleColor;
+        this.ctx.moveTo(this.radius,0);
+        this.ctx.lineTo(this.scaleMini,0);
+        this.ctx.stroke();
+      }
+      this.ctx.rotate(this.getRadians(1));
+    }
+    this.ctx.closePath();
+    this.ctx.restore();    
+  }
+
+  drawInnerBorder() {
+    this.ctx.save()
+    this.ctx.beginPath();
+    this.ctx.arc(0, 0, this.radius - this.borderWidth / 2, 0, Math.PI * 2, false);
+    this.ctx.strokeStyle = this.borderColor;
+    this.ctx.lineWidth = this.borderWidth;
+    this.ctx.lineCap="butt";
+    this.ctx.stroke();
+    this.ctx.closePath();
+    this.ctx.restore();   
+  }
+
+  draw() {
+    this.ctx.clearRect(-this.canvas.width,-this.canvas.height, this.canvas.width*2, this.canvas.height *2);
+    this.drawScale()
+    this.drawTexts()
+    this.drawInnerBorder()
+    this.raf = window.requestAnimationFrame(this.draw.bind(this));
+  }
+
+  updateAngle(number) {
+    console.log(number)
+    const vm = this
+    clearInterval(this.timer)
+    if (this.options.animationDuration <= 0) {
+      this.angle = number
+      this.oldAngle = number
+      return
+    }
+    this.timer = setInterval(function(){
+      if (number < vm.oldAngle){
+        vm.angle -= (vm.oldAngle - number)/100;
+        if (vm.angle <= number) {
+          clearInterval(vm.timer)
+          vm.oldAngle = number
+        }
+      } else {
+        vm.angle += (number - vm.oldAngle)/100;
+        if (vm.angle >= number) {
+          clearInterval(vm.timer)
+          vm.oldAngle = number
+        }
+      }
+    },vm.options.animationDuration/100);
+  }
+}
+
+
+
+var canvas = document.getElementById('canvas');
+var gauges = new drawGauges(canvas)
+gauges.draw();
+var num = 0;
+setInterval(function(){
+  num += 10;
+  gauges.updateAngle(num)
+},1000);
+
+
+
+
+
+// var canvas = document.getElementById('canvas');
+// var ctx = canvas.getContext('2d');
+// // 基础
+// var marginX = canvas.width / 2;
+// var marginY = canvas.height / 2;
+// var radius = marginX - 50;
+// var textRadius = radius + 30
+// // 刻度
+// var scaleMedium = radius + 15;
+// var scaleSmall = radius + 10;
+// var scaleMini = radius + 5;
+// // 内边框
+// var borderWidth = 1;
+// // 颜色
+// var borderColor = 'red';
+// var scaleColor = 'green';
+// var textColor = 'green';
+// var textMainColor = 'blue';
+// // 旋转
+// var angle = 0;
+// var oldAngle = 0;
+// // 定时器
+// var timer;
+
+// // 初始化
+// var raf;
+// ctx.translate(marginX, marginY);
+
+// function initGauges(canvas) {
+//   canvas = canvas
+//   ctx = canvas.getContext('2d');
+//   ctx.translate(marginX, marginY);
+// }
+
+// function getRadians(angle){
+//   return angle * Math.PI / 180
+// }
+
+// function drawTexts() {
+//   ctx.save();
+//   ctx.beginPath();
+//   ctx.textAlign = 'center';
+//   ctx.textBaseline = 'middle';
+//   for (var i=0;i<36;i++){
+//     var value = i*10
+//     var textAngle = getRadians(value + angle)
+//     // var textRadius = textRadius
+//     var x = textRadius * Math.sin(textAngle)
+//     // TODO: y axis compensate -2
+//     var y = -(textRadius * Math.cos(textAngle) - 2)
+
+//     if (value === 0) {
+//       value = '北'
+//       ctx.font="24px Arial";
+//       ctx.fillStyle=textMainColor;
+//     } else if (value === 90) {
+//       value = '东'
+//       ctx.font="24px Arial";
+//       ctx.fillStyle=textMainColor;
+//     } else if (value === 180) {
+//       value = '南'
+//       ctx.font="24px Arial";
+//       ctx.fillStyle=textMainColor;
+//     } else if (value === 270) {
+//       value = '西'
+//       ctx.font="24px Arial";
+//       ctx.fillStyle=textMainColor;
+//     } else {
+//       ctx.font="16px Arial";
+//       ctx.fillStyle=textColor;
+//     }
+//     ctx.fillText(value, x, y);
+//   }
+//   ctx.closePath();
+//   ctx.restore();
+// }
+
+// function drawScale() {
+//   // 大刻度
+//   ctx.save();
+//   ctx.beginPath();
+//   ctx.rotate(getRadians(angle));
+//   ctx.lineWidth = 2;
+  
+//   for (var i=0;i<72;i++){
+//     var to = scaleMedium
+//     if (i % 2 != 0) {
+//       var to = scaleSmall
+//     }
+//     ctx.beginPath();
+//     ctx.strokeStyle=scaleColor;
+//     ctx.moveTo(radius,0);
+//     ctx.lineTo(to,0);
+//     ctx.stroke();
+//     ctx.rotate(getRadians(5));
+//   }
+//   ctx.closePath();
+//   ctx.restore();
+
+//   // 小刻度
+//   ctx.save();
+//   ctx.beginPath();
+//   ctx.rotate(getRadians(angle));
+//   ctx.lineWidth = 1;
+  
+//   for (i=0;i<360;i++){
+//     if (i%5!=0) {
+//       ctx.beginPath();
+//       ctx.strokeStyle=scaleColor;
+//       ctx.moveTo(radius,0);
+//       ctx.lineTo(scaleMini,0);
+//       ctx.stroke();
+//     }
+//     ctx.rotate(getRadians(1));
+//   }
+//   ctx.closePath();
+//   ctx.restore();    
+// }
+
+// function drawInnerBorder() {
+//   ctx.save()
+//   ctx.beginPath();
+//   ctx.arc(0, 0, radius - borderWidth / 2, 0, Math.PI * 2, false);
+//   ctx.strokeStyle = borderColor;
+//   ctx.lineWidth=borderWidth;
+//   ctx.lineCap="butt";
+//   ctx.stroke();
+//   ctx.closePath();
+//   ctx.restore();   
+// }
+
+// function draw() {
+//   ctx.clearRect(-canvas.width,-canvas.height, canvas.width*2, canvas.height *2);
+//   drawScale()
+//   drawTexts()
+//   drawInnerBorder()
+//   raf = window.requestAnimationFrame(draw);
+// }
+
+// function updateAngle(number) {
+//   clearInterval(timer)
+//   timer = setInterval(function(){
+//     if (number < oldAngle){
+//       angle -= (oldAngle - number)/100;
+//       if (angle <= number) {
+//         clearInterval(timer)
+//         oldAngle = number
+//       }
+//     } else {
+//       angle += (number - oldAngle)/100;
+//       if (angle >= number) {
+//         clearInterval(timer)
+//         oldAngle = number
+//       }
+//     }
+//   },500/100);
+// }
+
+// draw();
+// var num = 0;
+// setInterval(function(){
+//   num += 10
+//   updateAngle(num)
+// },1000);
+</script>

@@ -1,0 +1,38 @@
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+<title>测试strokeStyle</title>
+</head>
+<body>
+  <canvas id="canvas" width="800" height="600" style="border: 1px solid #000; background: #333;"></canvas>
+  <img src="data:image/png;base64,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">
+<script>
+    var canvas = document.getElementById("canvas");
+    var context = canvas.getContext("2d");
+ 
+        let color_map_width = 20;
+        let color_map_height = 500;
+        let color_map_left = 10;
+        let color_map_top = 10
+
+        // 绘制彩色块
+        context.rect(color_map_left + 1, color_map_top + 1, color_map_width, color_map_height);
+        var grd1 = context.createLinearGradient(0, 0, 0, color_map_height);
+        
+        grd1.addColorStop(0, 'DarkRed'); // 设置顶部颜色
+        grd1.addColorStop(0.25, 'OrangeRed'); // 设置顶部颜色
+        grd1.addColorStop(0.4, 'yellow'); // 设置中间颜色
+        grd1.addColorStop(0.7, 'Cyan'); // 设置底部颜色
+        grd1.addColorStop(1, 'DarkBlue'); // 设置底部颜色
+        context.fillStyle = grd1;
+        context.fill();
+
+        //绘制边框
+        context.beginPath();
+        context.lineWidth="2";
+        context.strokeStyle="white";
+        context.rect(color_map_left, color_map_top , color_map_width + 2, color_map_height + 2);
+        context.stroke();
+</script>
+</body>
+</html>

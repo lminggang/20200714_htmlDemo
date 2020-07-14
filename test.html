@@ -1,0 +1,24 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>无标题文档</title>
+<script type="text/javascript">
+var setCursorPos = function(el, pos){
+    if(el.createTextRange){
+        var rng = el.createTextRange(); //新建textRange对象  
+        rng.moveStart('character', pos); //更改rng对象的开始位置  
+        rng.collapse(true); //光标移动到范围结尾  
+        rng.select();//选中  
+        el.focus();
+    }else if(el.setSelectionRange){
+        el.focus();  //先聚集
+        el.setSelectionRange( pos ,  pos );  //设光标
+    }
+}
+</script>
+</head>
+<body>
+<input type="text" id="aaa" value="abcdefghijk123456789"/><input type="button" value="test" οnclick="setCursorPos(document.getElementById('aaa'),10);"/>
+</body>
+</html>
